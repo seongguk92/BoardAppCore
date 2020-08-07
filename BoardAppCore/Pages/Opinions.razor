@@ -1,0 +1,140 @@
+﻿@page "/Opinions"
+
+@inject IOpinitonRepository repository
+@inject IJSRuntime JsRuntime
+
+<h1>게시판</h1>
+
+<p>자유롭게 의견을 나눠주세요.</p>
+
+@if (opinions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>의견ID</th>
+                <th>닉네임</th>
+                <th>의견내용</th>
+                <th>삭제</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var opinion in opinions)
+            {
+                <tr>
+                    <td>@opinion.board_id</td>
+                    <td>@opinion.nick_nm</td>
+                    <td>@opinion.content_ct</td>
+                    <td><button class="btn btn-primary" @onclick="() => Delete_btn_Click(opinion.board_id)">Delete</button></td>
+                </tr>
+
+                SetBoardId(opinion.board_id);
+            }
+        </tbody>
+    </table>
+}
+
+<input type="button" value="의견작성" @onclick="Modal_Show_btn_Click" class="btn btn-primary" />
+
+@if (isShow)
+{
+    <div class="modal" tabindex="-1" role="dialog" style="display:block">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">글 작성</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close_btn_Click">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label>닉네임</label>
+                            <input type="text" class="form-control" placeholder="닉네임" @bind="opinion.nick_nm">
+                        </div>
+                        <div class="form-group">
+                            <label>내용</label>
+                            <input type="text" class="form-control" placeholder="내용" @bind="opinion.content_ct">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="Save_btn_Click">저장</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close_btn_Click">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    COpinion opinion = new COpinion();
+    private List<COpinion> opinions;
+    private bool isShow = false;
+    private int lastBoardId = 0;
+
+    private void SetBoardId(int board_id)
+    {
+        lastBoardId = board_id;
+    }
+
+    /// <summary>
+    /// Init
+    /// </summary>
+    /// <returns></returns>
+    protected override async Task OnInitializedAsync()
+    {
+        opinions = await repository.GetOpinions();
+    }
+
+    /// <summary>
+    /// 추가 클릭 시
+    /// </summary>
+    private void Modal_Show_btn_Click()
+    {
+        isShow = true;
+    }
+
+    /// <summary>
+    /// 삭제 클릭 시
+    /// </summary>
+    /// <param name="content_se"></param>
+    /// <returns></returns>
+    async Task Delete_btn_Click(int board_id)
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "정말 삭제 하실래요 ?");
+        if (confirmed)
+        {
+            await repository.DeleteOpinions(board_id);
+            opinions = await repository.GetOpinions();
+            opinion = new COpinion();
+        }
+    }
+
+    /// <summary>
+    /// 닫기 버튼 클릭 시
+    /// </summary>
+    private void Close_btn_Click()
+    {
+        isShow = false;
+        opinion = new COpinion();
+    }
+
+    /// <summary>
+    /// 저장 버튼 클릭 시
+    /// </summary>
+    /// <returns></returns>
+    private async Task Save_btn_Click()
+    {
+        opinion.board_id = lastBoardId + 1;
+        await repository.AddOpinion(opinion);
+        isShow = false;
+        opinions = await repository.GetOpinions();
+        opinion = new COpinion();
+    }
+}

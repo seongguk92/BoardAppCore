@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using BoardAppCore.Areas.Identity;
 using BoardAppCore.Data;
+using BoardAppCore.Models;
 
 namespace BoardAppCore
 {
@@ -40,6 +41,8 @@ namespace BoardAppCore
             services.AddServerSideBlazor();
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
             services.AddSingleton<WeatherForecastService>();
+
+            services.AddTransient<IOpinitonRepository, COpinitonRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
