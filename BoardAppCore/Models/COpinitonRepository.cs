@@ -1,12 +1,12 @@
 ﻿using BoardAppCore.Data;
-using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace BoardAppCore.Models
 {
-    public class COpinitonRepository
+    public class COpinitonRepository : IOpinitonRepository
     {
         private readonly ApplicationDbContext _context;
 
